@@ -1,0 +1,315 @@
+import random
+import time
+
+print ("Добро пожаловать в программу расчёта испарения с водной поверхности")
+def menu():
+    print ("1 - Инструкция\n2 - Расчёты\n3 - Закрыть программу")
+    status = "1"
+    while status == "1":
+        sign = input ()
+        status = "0"
+        if sign == "1":
+            print ("Полный перечень данных каждого месяца, который потребуется ввести для расчётов:\n\nТемпература воздуха\nОблачность\nСкорость ветра\nАльбедо поверхности\nПрозрачность атмосферы\nSдн -тепловой поток от дна\nСуммарная солнечная радиация на широте 64 гр (из справочника)\nДанные вводятся списками среднемесячных значений за год cо значком ';' в качестве разделителя, например:\n\nТемпература воздуха в цельсиях: 1; 2,1; 3; 4; 5; 6; 7; 8; 9,23; 10; 11; 12\nСкорость ветра м\с: 1; 2,1; 3; 4; 5; 6; 7; 8; 9,23; 10; 11; 12")        
+            print ("\n\n1 - Перейти к расчётам\n2 - Закрыть программу")
+            exits = "0"
+            while exits == "0":
+                exits = input()
+                if exits == "2":
+                    exit
+                elif exits == "1":
+                    #try:
+                    calculations()
+                    #except:
+                     #   print('В вычислительном блоке произошла ошибка. Пожалуйста, проверьте правильность ввода данных.\nОбратите внимание, временные ряды должны быть одной длины.')
+                else:
+                    print ("Простите, но вы ввели неверныю команду.\nВведите 1, что бы перейти к расчётам или 2, что бы затрыть программу.")
+                    exits = "0"
+        elif sign == "2":
+            print("1 - Внести данные с клавиатуры\n2 - Загрузить файл с данными\n")
+            status="0"
+            while status == "0":
+                signR = input()
+                if signR == '1':
+                    try:
+                        calculations()
+                    except:
+                        print('В вычислительном блоке произошла ошибка. Пожалуйста, проверьте правильность ввода данных.\nОбратите внимание, временные ряды должны быть одной длинны.')
+                elif signR == "2":
+                    data_fail()
+                else:
+                     print ("Простите, но вы ввели неверныю команду.\nВведите 1, что бы ввести данные с клавиатуры или 2, что бы загрузить из txt файла.")
+        elif sign == "3":
+            exit
+        else:
+            print ("Простите, но вы ввели неверныю команду.\nВведите 1, что бы просмотреть инструкцию или 2, что бы перейти к расчёту испарения.\n")
+            status = "1"
+
+def data_fail():
+    dimT = []
+    dimPressure = []
+    dimCloudGeneral= []
+    dimCloudGown = []
+    dimWind = []
+    dimAlbedo = []
+    dimClarityAtmos = []
+    dimHeatFlow = []
+    dimSumSolarRadiation = []
+    
+    try:
+        fail = input("Введите полный путь к .txt файлу с данными. Его можно извлечь, сделав копию вайла в буфере.")
+        file = open(fail, 'r')
+        for line in file:
+            if line.split(";")[0]=="dimT":
+                dimT.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimPressure":
+                dimPressure.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimCloudGeneral":
+                dimCloudGeneral.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimCloudGown":
+                dimCloudGown.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimWind":
+                dimWind.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimAlbedo":
+                dimAlbedo.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimClarityAtmos":
+                dimClarityAtmos.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimHeatFlow":
+                dimHeatFlow.append(line.split(";")[1:])
+            elif line.split(";")[0]=="dimSumSolarRadiation":
+                dimSumSolarRadiation.append(line.split(";")[1:])
+            else:
+                print('error')
+    except:
+        print('Файн не найден!')
+        time.sleep(3)
+        exit()
+
+    n = len(dimSumSolarRadiation[0])
+    TemSurfWater = [] #= [float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0)]
+    longline = len(dimT)
+    EndWaterTemper = []
+    longline = len(dimT[0])
+    for i in range (0 , longline):
+        #if i!=longline
+        TemSurfWater.append(float(0))
+        EndWaterTemper.append(float(-77777))
+    print(EndWaterTemper)
+    
+    print('________________check downloading array №1__________________')
+    print(dimT)
+    print(dimPressure)
+    print(dimCloudGeneral)
+    print(dimCloudGown)
+    print(dimWind)
+    print(dimAlbedo)
+    print(dimClarityAtmos)
+    print(dimHeatFlow)
+    print(dimSumSolarRadiation)
+    #print("-"+str(n)+"-")
+    #print(n)
+    #print(dimSumSolarRadiation[0][0])
+    #print(dimSumSolarRadiation[0][8])
+    #print(dimCloudGeneral[0][0])
+    #print(dimCloudGeneral[0][8])
+    print('____________________________________________________________')
+    Sia_EffectRadAtmos = []
+    Sp_AbsorbedRadiation = []
+    for i in range (0 , n-2):
+        Sp_AbsorbedRadiation.append(float(dimSumSolarRadiation[0][i]) * (float(1) - float(dimCloudGeneral[0][i]) / float(10)*(float(1) - float(0.44)))*(float(1) - float(0.074)))
+        # round() если нужно будет округлить
+        Sia_EffectRadAtmos.append(float(5.67)*(float(10)**(float(-8)))*(float(273.16)+float(dimT[0][i]))**(float(4))*(float(0.15)+float(0.7)))
+    #print(Sp_AbsorbedRadiation, 'Sp_AbsorbedRadiation') #Заменить x на буквенное обозначение и сформировать список со значениями
+
+    #print(Sia_EffectRadAtmos, 'Sia_EffectRadAtmos\n')
+        
+    StartedWaterTemper = []
+    F2_SumAmountHeatAbsorWater = []
+    F1_SumAmountHeatAbsorWater = []
+
+
+    #_____________________________________________________________________________
+    # Дальше расчёт должен идти паралельно, т.к. затрагиваются исторические занные
+    #print('________________check logs №2__________________')
+    #print(Sp_AbsorbedRadiation[7])
+    #print('n=', n)
+    #print('_______________________________________________')
+    for i in range (0 , n-2):
+        # Тут первый месяц вегда идёт со значением 3...
+        if i<1:
+            e=(i+1)
+        else:
+            e=i
+        if EndWaterTemper[e-1] > float(-1000):
+            StartedWaterTemper.append(EndWaterTemper[i-1])
+        else:
+            StartedWaterTemper.append(float(3))
+            
+        print(StartedWaterTemper, ' --- StartedWaterTemper')
+        
+        F1_SumAmountHeatAbsorWater.append(float(Sp_AbsorbedRadiation[i]) + float(Sia_EffectRadAtmos[i]) + float(dimHeatFlow[0][i]) + float(0.0053) * float(dimWind[0][i]) * (float(390) * float(dimT[0][i]) + float(590) * float(dimPressure[0][i])) + float(0.032) * float(1.5) * float(StartedWaterTemper[i]))                                                    
+        
+        F2_SumAmountHeatAbsorWater.append(float(0.96)*float(5.67)*(float(10)**(float(-8)))* ( float(273.16)+float(TemSurfWater[i]) ) **float(4)+float(0.485)*float(dimWind[0][i])* ( float(4.39)*float(TemSurfWater[i])+float(7.08)*float(6.1)*(float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) ) )+float(0.032)*float(1.5)*float(TemSurfWater[i]))
+        '''Подбор значения  темперы  поверхности воды'''
+        EvaporationWaterSurface = []
+        while round(float(F1_SumAmountHeatAbsorWater[i]), 2)-round(float(F2_SumAmountHeatAbsorWater[i]), 4) != 0:
+            if (round(float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])), 1) != 0:
+                F2_SumAmountHeatAbsorWater[i]=(float(0.96)*float(5.67)*(float(10)**(float(-8)))* ( float(273.16)+float(TemSurfWater[i]) ) **float(4)+float(0.485)*float(dimWind[0][i])* ( float(4.39)*float(TemSurfWater[i])+float(7.08)*float(6.1)*(float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) ) )+float(0.032)*float(1.5)*float(TemSurfWater[i]))
+                #print(round(float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])))
+                # time.sleep(1) # Сон в 3 секунды
+                if (float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])) > 0:
+                    radical = (float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i]))**float(0.5)
+                    TemSurfWater[i] = random.uniform(float(TemSurfWater[i]), (float(TemSurfWater[i])+float(0.05))) # Второе слагаемое влияет на точность подбота TemSurfWater
+                    #print(TemSurfWater[i])
+                if (float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i]) < 0):
+                    radical = (float(F2_SumAmountHeatAbsorWater[i])-float(F1_SumAmountHeatAbsorWater[i]))**float(0.5)
+                    TemSurfWater[i] = random.uniform(float(TemSurfWater[i]), (float(TemSurfWater[i])-float(0.05)))
+                    #print(TemSurfWater[i])
+        #print(TemSurfWater[i])
+        EndWaterTemper[i] = (2 * TemSurfWater[i] - StartedWaterTemper[i])
+        #print(round(TemSurfWater[i],2), ' --- TemSurfWater'+str(i) ) # Второй аргумент влияет на кол-во отображаемых цифр после запятойы
+        #print (Sp_AbsorbedRadiation, Sia_EffectRadAtmos, dimHeatFlow[0][1], dimWind[0][1], dimT[0][1], dimPressure[0][1], StartedWaterTemper)
+        
+    for i in range (0 , n-2):
+        number = float(0.14)*float(30.5)* ( float(6.1)*float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) -float(dimPressure[0][i]) ) * ( float(1)+float(0.72)*float(dimWind[0][i]) ) 
+        #print(number)
+        
+        EvaporationWaterSurface.append(number)
+    
+    print('_________________________Окно результатов_________________________\n', EvaporationWaterSurface, '\n\nSUM = ',  sum(EvaporationWaterSurface), '\n')
+
+
+    """n = len(EvaporationWaterSurface)
+    for i in range(0,n-1):
+    
+        Print = Print.append('{:<}' .format (EvaporationWaterSurface[i]))
+        print(Print)"""
+
+    time.sleep(1.5)
+
+    menu()
+            
+            
+def calculations():
+    print ("\nВведите данные для расчёта.\n")
+    dimT = []
+    dimT.append((input("Температура воздуха в градусах цельсия: ")).split(";")) # двумерный массив с одним эллементом внутри 
+    dimPressure = []
+    dimPressure.append((input("Давление в гПа: ")).split(";"))
+    dimCloudGeneral = []
+    dimCloudGeneral.append((input("Верхняя облачность в баллах: ")).split(";"))
+    dimCloudGown = []
+    dimCloudGown.append((input("Нижняя облачность в баллах: ")).split(";"))
+    dimWind = []
+    dimWind.append((input("Скорость ветра м/с: ")).split(";"))
+    dimAlbedo = []
+    dimAlbedo.append((input("Альбедо поверхности %: ")).split(";"))
+    dimClarityAtmos = []
+    dimClarityAtmos.append((input("Прозрачность атмосферы в долях: ")).split(";"))
+    dimHeatFlow = []
+    dimHeatFlow.append((input("Sдн -тепловой поток от дна Вт/м2: ")).split(";"))
+    dimSumSolarRadiation = []
+    dimSumSolarRadiation.append((input("Суммарная солнечная радиация на широте 64 гр (из справочника) Вт/м2: ")).split(";"))
+
+    #return dimT, dimPressure, dimCloudGeneral, dimCloudGown, dimWind, dimAlbedo, dimClarityAtmos, dimHeatFlow, dimSumSolarRadiation
+    formulas(dimT, dimPressure, dimCloudGeneral, dimCloudGown, dimWind, dimAlbedo, dimClarityAtmos, dimHeatFlow, dimSumSolarRadiation)
+
+
+def formulas(dimT, dimPressure, dimCloudGeneral, dimCloudGown, dimWind, dimAlbedo, dimClarityAtmos, dimHeatFlow, dimSumSolarRadiation):
+    # нужно доватить условие, которое проверяет количество заполненных колонок и тем самым оперделяет n для всех калькурируемых метрик
+    n = len(dimSumSolarRadiation[0])
+    TemSurfWater = [float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0)]
+    EndWaterTemper = []
+    longline = len(dimT[0])
+    for i in range (0 , longline):
+        #if i!=longline
+        EndWaterTemper.append('-77777')
+    print(EndWaterTemper)
+    #print("-"+str(n)+"-")
+
+    Sia_EffectRadAtmos = []
+    Sp_AbsorbedRadiation = []
+    for i in range (0 , n):
+        Sp_AbsorbedRadiation.append(float(dimSumSolarRadiation[0][i]) * (float(1) - float(dimCloudGeneral[0][i]) / float(10)*(float(1) - float(0.44)))*(float(1) - float(0.074)))
+        # round() если нужно будет округлить
+        Sia_EffectRadAtmos.append(float(5.67)*(float(10)**(float(-8)))*(float(273.16)+float(dimT[0][i]))**(float(4))*(float(0.15)+float(0.7)))
+    #print(Sp_AbsorbedRadiation, 'Sp_AbsorbedRadiation') #Заменить x на буквенное обозначение и сформировать список со значениями
+
+    #print(Sia_EffectRadAtmos, 'Sia_EffectRadAtmos\n')
+        
+    StartedWaterTemper = []
+    F2_SumAmountHeatAbsorWater = []
+    F1_SumAmountHeatAbsorWater = []
+
+
+    #_____________________________________________________________________________
+    # Дальше расчёт должен идти паралельно, т.к. затрагиваются исторические занные
+    for i in range (0 , n):
+        # Тут первый месяц вегда идёт со значением 3...
+        if i<1:
+            e=(i+1)
+        else:
+            e=i
+        if EndWaterTemper[e-1] > float(-1000):
+            StartedWaterTemper.append(EndWaterTemper[i-1])
+        else:
+            StartedWaterTemper.append(float(3))
+            
+        #print(StartedWaterTemper, ' --- StartedWaterTemper')
+        
+        F1_SumAmountHeatAbsorWater.append(float(Sp_AbsorbedRadiation[i]) + float(Sia_EffectRadAtmos[i]) + float(dimHeatFlow[0][i]) + float(0.0053) * float(dimWind[0][i]) * (float(390) * float(dimT[0][i]) + float(590) * float(dimPressure[0][i])) + float(0.032) * float(1.5) * float(StartedWaterTemper[i]))                                                    
+        
+        F2_SumAmountHeatAbsorWater.append(float(0.96)*float(5.67)*(float(10)**(float(-8)))* ( float(273.16)+float(TemSurfWater[i]) ) **float(4)+float(0.485)*float(dimWind[0][i])* ( float(4.39)*float(TemSurfWater[i])+float(7.08)*float(6.1)*(float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) ) )+float(0.032)*float(1.5)*float(TemSurfWater[i]))
+
+        '''Подбор значения  темперы  поверхности воды'''
+        while round(float(F1_SumAmountHeatAbsorWater[i]), 2)-round(float(F2_SumAmountHeatAbsorWater[i]), 5) != 0:
+            if (round(float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])), 1) != 0:
+                F2_SumAmountHeatAbsorWater[i]=(float(0.96)*float(5.67)*(float(10)**(float(-8)))* ( float(273.16)+float(TemSurfWater[i]) ) **float(4)+float(0.485)*float(dimWind[0][i])* ( float(4.39)*float(TemSurfWater[i])+float(7.08)*float(6.1)*(float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) ) )+float(0.032)*float(1.5)*float(TemSurfWater[i]))
+                #print(round(float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])))
+                # time.sleep(1) # Сон в 3 секунды
+                if (float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i])) > 0:
+                    TemSurfWater[i] = random.uniform(float(TemSurfWater[i]), (float(TemSurfWater[i])+float(0.05))) # Второе слагаемое влияет на точность подбота TemSurfWater
+                    #print(TemSurfWater[i])
+                if (float(F1_SumAmountHeatAbsorWater[i])-float(F2_SumAmountHeatAbsorWater[i]) < 0):
+                    TemSurfWater[i] = random.uniform(float(TemSurfWater[i]), (float(TemSurfWater[i])-float(0.05)))
+                    #print(TemSurfWater[i])
+        EndWaterTemper[i] = (2 * TemSurfWater[i] - StartedWaterTemper[i])
+        #print(round(TemSurfWater[i],2), ' --- TemSurfWater'+str(i) ) # Второй аргумент влияет на кол-во отображаемых цифр после запятойы
+        #print (Sp_AbsorbedRadiation, Sia_EffectRadAtmos, dimHeatFlow[0][1], dimWind[0][1], dimT[0][1], dimPressure[0][1], StartedWaterTemper)
+
+
+        EvaporationWaterSurface = []
+        EvaporationWaterSurface.append(float(0.14)*float(30.5)* ( float(6.1)*float(10)** ( float(7.63)*float(TemSurfWater[i])/ ( float(241.9)+float(TemSurfWater[i]) ) ) -float(dimPressure[0][i]) ) * ( float(1)+float(0.72)*float(dimWind[0][i]) ) )
+    
+    print('_________________________Окно результатов_________________________\n', EvaporationWaterSurface, '\n')
+
+
+    """n = len(EvaporationWaterSurface)
+    for i in range(0,n-1):
+    
+        Print = Print.append('{:<}' .format (EvaporationWaterSurface[i]))
+        print(Print)"""
+
+    time.sleep(1.5)
+
+    menu()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+menu()
